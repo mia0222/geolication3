@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>位置情報取得</title>
+</head>
+<body>
+    <h1>位置情報の取得</h1>
+    <p id="locationData">位置情報はここに表示されます.</p>
+
+    <script>
+        var locationDataElement = document.getElementById("locationData");
+
+        function displayLocation(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            var accuracy = position.coords.accuracy;
+            var timestamp = new Date(position.timestamp).toLocaleString();
+
+            locationDataElement.innerHTML = "緯度: " + latitude + "<br>経度: " + longitude + "<br>精度: " + accuracy + " メートル<br>取得時刻: " + timestamp;
+
+            // 15秒後に再度位置情報を取得
+            setTimeout(getLocation, 15000);
+        }
+
+        function getLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(displayLocation, function (error) {
+                    console.error("位置情報の取得に失敗しました: " + error.message);
+
+                    // エラーが発生した場合も15秒後に再度位置情報を取得
+                    setTimeout(getLocation, 15000);
+                });
+            } else {
+                console.error("Geolocationがサポートされていません");
+
+                // サポートされていない場合も15秒後に再度位置情報を取得
+                setTimeout(getLocation, 15000);
+            }
+        }
+
+        // 初回の位置情報取得を開始
+        getLocation();
+    </script>
+</body>
+</html>
