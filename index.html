@@ -1,36 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>位置情報取得</title>
+    <title>GPS Distance Calculator</title>
 </head>
 <body>
-    <h1>位置情報の取得</h1>
-    <p id="locationData">位置情報はここに表示されます.</p>
+    <button id="startButton">Start Tracking</button>
+    <button id="stopButton" style="display:none">Stop Tracking</button>
+    <p>Distance: <span id="distance">0 meters</span></p>
 
     <script>
-        var locationDataElement = document.getElementById("locationData");
+        const EARTH_RAD = 6378.137; // 地球の半径 (km)
+        let watchId;
+        let lastPosition;
+        let totalDistance = 0;
 
-        function displayLocation(position) {
-            var latitude = position.coords.latitude;
-            var longitude = position.coords.longitude;
-            var accuracy = position.coords.accuracy;
-            var timestamp = new Date(position.timestamp).toLocaleString();
+        const updateInterval = 5000; // タイマーの間隔 (5秒)
 
-            locationDataElement.innerHTML = "緯度: " + latitude + "<br>経度: " + longitude + "<br>精度: " + accuracy + " メートル<br>取得時刻: " + timestamp;
+        function deg2rad(deg) {
+            return deg * (Math.PI / 180.0);
         }
 
-        function getLocationAndDisplay() {
+        function cal_distance(x1, y1, x2, y2) {
+            x1 = deg2rad(x1);
+            y1 = deg2rad(y1);
+            x2 = deg2rad(x2);
+            y2 = deg2rad(y2);
+
+            const distance = EARTH_RAD * Math.acos(Math.sin(y1) * Math.sin(y2) + Math.cos(y1) * Math.cos(y2) * Math.cos(x2 - x1));
+            return distance;
+        }
+
+        function startTracking() {
             if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(displayLocation, function (error) {
-                    console.error("位置情報の取得に失敗しました: " + error.message);
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    lastPosition = position;
+                    watchId = navigator.geolocation.watchPosition(updateDistance);
+                    document.getElementById('startButton').style.display = 'none';
+                    document.getElementById('stopButton').style.display = 'inline';
+                    document.getElementById('startButton').innerText = 'Tracking...';
+
+                    setInterval(function () {
+                        navigator.geolocation.getCurrentPosition(function (position) {
+                            lastPosition = position;
+                        });
+                    }, updateInterval);
                 });
             } else {
-                console.error("Geolocationがサポートされていません");
+                alert("このブラウザは位置情報をサポートしていません。");
             }
         }
 
-        // 15秒ごとに位置情報を取得して表示
-        setInterval(getLocationAndDisplay, 15000);
+        function updateDistance(position) {
+            if (lastPosition) {
+                const currentDistance = cal_distance(lastPosition.coords.longitude, lastPosition.coords.latitude, position.coords.longitude, position.coords.latitude);
+                totalDistance += currentDistance;
+                lastPosition = position;
+                document.getElementById('distance').innerText = totalDistance.toFixed(2) + " meters";
+            } else {
+                lastPosition = position;
+            }
+        }
+
+        document.getElementById('startButton').addEventListener('click', function () {
+            startTracking();
+        });
+
+        document.getElementById('stopButton').addEventListener('click', function () {
+            navigator.geolocation.clearWatch(watchId);
+            document.getElementById('startButton').style.display = 'inline';
+            document.getElementById('stopButton').style.display = 'none';
+            document.getElementById('startButton').innerText = 'Start Tracking';
+        });
     </script>
 </body>
 </html>
