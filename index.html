@@ -52,30 +52,18 @@
         function startTracking() {
             if (!isTracking && weight !== null) {
                 if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(function (position) {
-                        lastPosition = position;
-                        watchId = navigator.geolocation.watchPosition(updateDistance);
-                        document.getElementById('weightInput').style.display = 'none';
-                        document.getElementById('setWeightButton').style.display = 'none';
-                        document.getElementById('startButton').style.display = 'none';
-                        document.getElementById('stopButton').style.display = 'inline';
-                        startTime = Date.now();
-                        isTracking = true;
-                    });
+                    watchId = navigator.geolocation.watchPosition(updateDistance);
+                    document.getElementById('weightInput').style.display = 'none';
+                    document.getElementById('setWeightButton').style.display = 'none';
+                    document.getElementById('startButton').style.display = 'none';
+                    document.getElementById('stopButton').style.display = 'inline';
+                    startTime = Date.now();
+                    isTracking = true;
                 } else {
                     alert("このブラウザは位置情報をサポートしていません。");
                 }
             } else if (weight === null) {
                 alert("正しい体重を入力してください。");
-            }
-        }
-
-        function stopTracking() {
-            if (isTracking) {
-                navigator.geolocation.clearWatch(watchId);
-                document.getElementById('startButton').style.display = 'inline';
-                document.getElementById('stopButton').style.display = 'none';
-                isTracking = false;
             }
         }
 
@@ -117,6 +105,15 @@
         document.getElementById('stopButton').addEventListener('click', function () {
             stopTracking();
         });
+
+        function stopTracking() {
+            if (isTracking) {
+                navigator.geolocation.clearWatch(watchId);
+                document.getElementById('startButton').style.display = 'inline';
+                document.getElementById('stopButton').style.display = 'none';
+                isTracking = false;
+            }
+        }
     </script>
 </body>
 </html>
