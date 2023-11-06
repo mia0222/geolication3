@@ -34,11 +34,6 @@
         }
 
         function cal_distance(x1, y1, x2, y2) {
-            x1 = deg2rad(x1);
-            y1 = deg2rad(y1);
-            x2 = deg2rad(x2);
-            y2 = deg2rad(y2);
-
             const distance = EARTH_RAD * Math.acos(Math.sin(y1) * Math.sin(y2) + Math.cos(y1) * Math.cos(y2) * Math.cos(x2 - x1));
             return distance;
         }
@@ -52,7 +47,28 @@
         function startTracking() {
             if (!isTracking && weight !== null) {
                 if ("geolocation" in navigator) {
-                    watchId = navigator.geolocation.watchPosition(updateDistance);
+                    watchId = navigator.geolocation.watchPosition(function (position) {
+                        const currentDistance = lastPosition ? cal_distance(
+                            lastPosition.coords.longitude,
+                            lastPosition.coords.latitude,
+                            position.coords.longitude,
+                            position.coords.latitude
+                        ) : 0;
+                        totalDistance += currentDistance;
+                        lastPosition = position;
+
+                        document.getElementById('distance').innerText = totalDistance.toFixed(2) + " メートル";
+
+                        const elapsedTime = (Date.now() - startTime) / 1000;
+                        document.getElementById('time').innerText = elapsedTime.toFixed(2) + " 秒";
+
+                        if (!isNaN(weight)) {
+                            const caloriesBurned = cal_calories(weight, totalDistance);
+                            totalCalories = caloriesBurned;
+                            document.getElementById('calories').innerText = caloriesBurned.toFixed(2) + " kcal";
+                        }
+                    });
+
                     document.getElementById('weightInput').style.display = 'none';
                     document.getElementById('setWeightButton').style.display = 'none';
                     document.getElementById('startButton').style.display = 'none';
@@ -64,26 +80,6 @@
                 }
             } else if (weight === null) {
                 alert("正しい体重を入力してください。");
-            }
-        }
-
-        function updateDistance(position) {
-            if (lastPosition) {
-                const currentDistance = cal_distance(lastPosition.coords.longitude, lastPosition.coords.latitude, position.coords.longitude, position.coords.latitude);
-                totalDistance += currentDistance;
-                lastPosition = position;
-                document.getElementById('distance').innerText = totalDistance.toFixed(2) + " メートル";
-
-                const elapsedTime = (Date.now() - startTime) / 1000;
-                document.getElementById('time').innerText = elapsedTime.toFixed(2) + " 秒";
-
-                if (!isNaN(weight)) {
-                    const caloriesBurned = cal_calories(weight, totalDistance);
-                    totalCalories = caloriesBurned;
-                    document.getElementById('calories').innerText = caloriesBurned.toFixed(2) + " kcal";
-                }
-            } else {
-                lastPosition = position;
             }
         }
 
